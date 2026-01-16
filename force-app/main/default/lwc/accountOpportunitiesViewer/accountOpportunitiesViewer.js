@@ -14,16 +14,24 @@ export default class AccountOpportunitiesViewer extends LightningElement {
         { label: 'Phase', fieldName: 'StageName', type: 'text' }
     ];
 
-    isLoading = false;
-    hasClicked = false; // 👈 très important
+    wiredResult;
 
-    get hasOpportunities() {
+       get hasOpportunities() {
         return Array.isArray(this.opportunities) && this.opportunities.length > 0;
     }
 
-    // 👉 message d’erreur si clic ET aucune opportunité
-    get showError() {
-        return this.hasClicked && !this.isLoading && !this.hasOpportunities;
+    @wire(getOpportunities, { accountId: '$recordId' })
+    wiredOpportunities(result) {
+        this.wiredResult = result;
+
+        const { data, error } = result;
+        if (data) {
+            this.opportunities = data;
+            this.error = null;
+        } else if (error) {
+            this.error = error;
+            this.opportunities = undefined;
+        }
     }
 
     handleRafraichir() {

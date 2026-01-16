@@ -8,27 +8,24 @@
             </lightning-button>
         </div>
 
-        <!-- Spinner -->
-        <template if:true={isLoading}>
-            <div class="slds-p-around_medium">
-                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
-            </div>
-        </template>
+            <template if:true={hasOpportunities}>
+                <div class="slds-box slds-m-top_small">
+                 <lightning-datatable
+                 data={opportunities}
+                  columns={columns}
+                   key-field="Id">
+                  </lightning-datatable>
+                </div>
 
-        <!-- Tableau seulement si données -->
-        <template if:true={hasOpportunities}>
-            <lightning-datatable
-                data={opportunities}
-                columns={columns}
-                key-field="Id">
-            </lightning-datatable>
-        </template>
+            </template>
 
-        <!-- Message d'erreur (tableau vide OU erreur Apex) -->
-        <template if:true={error}>
-            <p class="slds-p-around_medium slds-text-color_error">
-                {error}
-            </p>
-        </template>
+            <template if:false={hasOpportunities}>
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Erreur</span>
+                    <h2>Une erreur s'est produite lors du chargement des opportunités.</h2>
+                </div>
+            </template>
+
+        </div>
     </lightning-card>
 </template>
