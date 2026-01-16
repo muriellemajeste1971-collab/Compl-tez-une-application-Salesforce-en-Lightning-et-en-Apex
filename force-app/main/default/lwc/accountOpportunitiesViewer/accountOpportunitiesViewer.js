@@ -1,10 +1,10 @@
-import { LightningElement, api, wire, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import getOpportunities from '@salesforce/apex/AccountOpportunitiesController.getOpportunities';
-import { refreshApex } from '@salesforce/apex';
 
 export default class AccountOpportunitiesViewer extends LightningElement {
     @api recordId;
-    @track opportunities;
+
+    @track opportunities = [];
     @track error = null;
 
     columns = [
@@ -14,23 +14,37 @@ export default class AccountOpportunitiesViewer extends LightningElement {
         { label: 'Phase', fieldName: 'StageName', type: 'text' }
     ];
 
-    wiredResult;
+    isLoading = false;
+    hasClicked = false; // 👈 très important
 
-    @wire(getOpportunities, { accountId: '$recordId' })
-    wiredOpportunities(result) {
-        this.wiredResult = result;
+    get hasOpportunities() {
+        return Array.isArray(this.opportunities) && this.opportunities.length > 0;
+    }
 
-        const { data, error } = result;
-        if (data) {
-            this.opportunities = data;
-            this.error = null;
-        } else if (error) {
-            this.error = error;
-            this.opportunities = undefined;
-        }
+    // 👉 message d’erreur si clic ET aucune opportunité
+    get showError() {
+        return this.hasClicked && !this.isLoading && !this.hasOpportunities;
     }
 
     handleRafraichir() {
-        refreshApex(this.wiredResult);
+        this.hasClicked = true;
+        this.isLoading = true;
+        this.error = null;
+        this.opportunities = [];
+
+        getOpportunities({ accountId: this.recordId })
+            .then((result) => {
+                this.opportunities = result || [];
+                this.isLoading = false;
+
+                // 👇 si tableau vide, on force une "erreur fonctionnelle"
+                if (this.opportunities.length === 0) {
+                    this.error = 'Aucune opportunité trouvée pour ce compte.';
+                }
+            })
+            .catch(() => {
+                this.error = 'Erreur lors du chargement des opportunités.';
+                this.isLoading = false;
+            });
     }
 }
